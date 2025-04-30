@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cutting List Calculator</title>
+  <style>
+    body { font-family: sans-serif; padding: 1em; max-width: 600px; margin: auto; }
+    input, button, textarea { width: 100%; margin: 0.5em 0; padding: 0.5em; }
+    textarea { height: 100px; }
+  </style>
+</head>
+<body>
+  <h2>Linear Cutting List Calculator</h2>
+
+  <label for="stock">Stock Length (mm):</label>
+  <input type="number" id="stock" placeholder="e.g. 6000" />
+
+  <label for="cuts">Enter Required Cuts (mm, one per line):</label>
+  <textarea id="cuts" placeholder="e.g.\n1200\n2400\n1800"></textarea>
+
+  <button onclick="calculateCuts()">Calculate</button>
+
+  <h3>Result:</h3>
+  <pre id="result"></pre>
+
+  <script>
+    function calculateCuts() {
+      const stockLength = parseInt(document.getElementById("stock").value);
+      const cuts = document.getElementById("cuts").value
+        .split("\n")
+        .map(x => parseInt(x.trim()))
+        .filter(x => !isNaN(x) && x > 0);
+
+      const sortedCuts = cuts.sort((a, b) => b - a);
+      const stocks = [];
+
+      sortedCuts.forEach(cut => {
+        let placed = false;
+        for (let i = 0; i < stocks.length; i++) {
+          if (stocks[i].remaining >= cut) {
+            stocks[i].cuts.push(cut);
+            stocks[i].remaining -= cut;
+            placed = true;
+            break;
+          }
+        }
+        if (!placed) {
+          stocks.push({ cuts: [cut], remaining: stockLength - cut });
+        }
+      });
+
+      let resultText = `Total stock bars used: ${stocks.length}\n\n`;
+      stocks.forEach((s, i) => {
+        resultText += `Stock #${i + 1}: ${s.cuts.join(" + ")} = ${stockLength - s.remaining} (left: ${s.remaining})\n`;
+      });
+
+      document.getElementById("result").textContent = resultText;
+    }
+  </script>
+</body>
+</html>
